@@ -7,20 +7,28 @@
 <body>
   <h2>TikTok OAuth Code</h2>
   <p id="code">Loading...</p>
+  <button id="copyBtn">Copy Code</button>
 
   <script>
     // ناخد الـ code من URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    const state = params.get('state');
+    const codeElement = document.getElementById('code');
+    const copyBtn = document.getElementById('copyBtn');
 
     if (code) {
-      document.getElementById('code').textContent = `Code: ${code}`;
-      console.log('OAuth Code:', code);
-      console.log('State:', state);
+      codeElement.textContent = `Code: ${code}`;
     } else {
-      document.getElementById('code').textContent = 'No code found in URL.';
+      codeElement.textContent = 'No code found in URL.';
+      copyBtn.disabled = true;
     }
+
+    // زرار نسخ الكود
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Code copied to clipboard!');
+      });
+    });
   </script>
 </body>
 </html>
