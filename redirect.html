@@ -2,32 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Redirect Handler</title>
+  <title>TikTok OAuth Token</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h2 { color: #111; }
+    #token { margin: 20px 0; word-break: break-all; color: #333; font-weight: bold; }
+    #copyBtn { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #1da1f2; color: #fff; border: none; border-radius: 5px; transition: background-color 0.2s; }
+    #copyBtn:hover { background-color: #0d8ddb; }
+    #message { margin-top: 15px; color: green; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h2>TikTok OAuth Code</h2>
-  <p id="code">Loading...</p>
-  <button id="copyBtn">Copy Code</button>
+  <h2>TikTok OAuth Access Token</h2>
+  <p id="token">Loading...</p>
+  <button id="copyBtn">Copy Token</button>
+  <p id="message"></p>
 
   <script>
-    // ناخد الـ code من URL
+    const CLIENT_KEY = "awmzol9whd009ehc"; // حط هنا Client Key
+    const CLIENT_SECRET = "
+P4VhcSYEanUCy4htUr7KHdarCwHfKWru"; // حط هنا Client Secret
+    const REDIRECT_URI = "https://anas-m-hanafi.github.io/anas-tiktok-policy/redirect.html";
+
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    const codeElement = document.getElementById('code');
+    const tokenElement = document.getElementById('token');
     const copyBtn = document.getElementById('copyBtn');
+    const message = document.getElementById('message');
 
-    if (code) {
-      codeElement.textContent = `Code: ${code}`;
-    } else {
-      codeElement.textContent = 'No code found in URL.';
+    if (!code) {
+      tokenElement.textContent = 'No code found in URL.';
       copyBtn.disabled = true;
+    } else {
+      // نرسل POST لـ TikTok لتحويل code إلى Access Token
+      fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_key: CLIENT_KEY,
+          client_secret: CLIENT_SECRET,
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: REDIRECT_URI
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.access_token) {
+          tokenElement.textContent = data.access_token;
+        } else {
+          tokenElement.textContent = 'Error getting token: ' + JSON.stringify(data);
+        }
+      })
+      .catch(err => {
+        tokenElement.textContent = 'Request failed: ' + err;
+      });
     }
 
-    // زرار نسخ الكود
+    // زر نسخ الـ token
     copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(code).then(() => {
-        alert('Code copied to clipboard!');
-      });
+      const token = tokenElement.textContent;
+      if (token && !token.startsWith('Error') && !token.startsWith('No code')) {
+        navigator.clipboard.writeText(token).then(() => {
+          message.textContent = 'Token copied to clipboard!';
+        }).catch(() => {
+          message.textContent = 'Failed to copy token.';
+        });
+      }
     });
   </script>
 </body>
